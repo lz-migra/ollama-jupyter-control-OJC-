@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama AI - Centro de Mando</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="h-full text-slate-100 font-sans antialiased selection:bg-cyan-500 selection:text-slate-900">
+
+    <div class="min-h-full flex flex-col">
+        <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-cyan-500/10 rounded-lg text-cyan-400 border border-cyan-500/20">
+                        <i data-lucide="cpu" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-tight text-white">Ollama Cloud Control</h1>
+                        <p class="text-xs text-slate-400">Entorno Backend unificado por un solo túnel</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-medium">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    GPU T4 Activa (16GB VRAM)
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                
+                <div class="lg:col-span-1 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible border-b lg:border-b-0 lg:border-r border-slate-800 pb-4 lg:pb-0 lg:pr-4">
+                    <button onclick="switchTab('config')" id="tab-btn-config" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium w-full transition bg-slate-800 text-white border border-slate-700">
+                        <i data-lucide="sliders" class="w-4 h-4 text-cyan-400"></i>
+                        <span>1. Seleccionar IA</span>
+                    </button>
+                    <button onclick="switchTab('download')" id="tab-btn-download" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium w-full transition text-slate-400 hover:bg-slate-800/50 hover:text-slate-200">
+                        <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                        <span>2. Descargar Capas</span>
+                    </button>
+                    <button onclick="switchTab('connect')" id="tab-btn-connect" class="tab-btn flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium w-full transition text-slate-400 hover:bg-slate-800/50 hover:text-slate-200">
+                        <i data-lucide="link" class="w-4 h-4"></i>
+                        <span>3. Conectar VS Code</span>
+                    </button>
+                </div>
+
+                <div class="lg:col-span-3 min-h-[450px]">
+                    
+                    <div id="panel-config" class="tab-panel space-y-6">
+                        <div class="bg-slate-950/40 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                            <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                <i data-lucide="search" class="w-5 h-5 text-cyan-400"></i> Explorador de Modelos
+                            </h2>
+                            <p class="text-sm text-slate-400 mb-6">Filtra y selecciona el cerebro que inyectarás en la GPU de Colab.</p>
+
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Buscar en el catálogo</label>
+                                    <input type="text" id="model-search" placeholder="Ej: qwen2.5-coder, deepseek-r1..." 
+                                           class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition">
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Modelo Core</label>
+                                        <select id="model-list" size="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 h-40">
+                                            <option value="qwen2.5-coder" selected>qwen2.5-coder (Especialista en Código)</option>
+                                            <option value="deepseek-r1">deepseek-r1 (Razonamiento Lógico)</option>
+                                            <option value="llama3.1">llama3.1 (General de Meta)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Variante / Tamaño (Tags)</label>
+                                        <select id="model-tags" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-3 text-sm text-slate-200 focus:outline-none focus:border-cyan-500">
+                                            <option value="14b-instruct">14b-instruct (Recomendado para T4)</option>
+                                            <option value="7b-instruct">7b-instruct (Ultra rápido)</option>
+                                        </select>
+                                        
+                                        <div id="model-info" class="mt-4 p-3 bg-slate-900/50 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
+                                            <p>✨ <b>Tamaño aproximado:</b> ~9 GB en disco.</p>
+                                            <p>🔒 Ocupará un espacio óptimo en la VRAM de tu GPU.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 pt-6 border-t border-slate-800/60 flex justify-end">
+                                <button id="btn-lock-model" class="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold px-6 py-3 rounded-xl transition shadow-lg shadow-cyan-600/10 cursor-pointer">
+                                    <i data-lucide="check" class="w-4 h-4"></i> Fijar Configuración
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="panel-download" class="tab-panel space-y-6 hidden">
+                        <div class="bg-slate-950/40 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                            <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                <i data-lucide="download" class="w-5 h-5 text-amber-400"></i> Descargador de Capas
+                            </h2>
+                            <p class="text-sm text-slate-400 mb-6">Descarga los tensores del modelo directo a la máquina de Colab sin saturar el cuaderno.</p>
+
+                            <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Modelo Objetivo</span>
+                                        <span id="txt-selected-model" class="text-md font-bold text-cyan-400">Ninguno fijado todavía</span>
+                                    </div>
+                                    <span id="badge-status" class="px-2.5 py-1 text-xs rounded-md bg-slate-800 text-slate-400 font-medium border border-slate-700">Inactivo</span>
+                                </div>
+
+                                <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700">
+                                    <div id="progress-fill" class="bg-gradient-to-r from-cyan-500 to-amber-500 h-full w-0 transition-all duration-300"></div>
+                                </div>
+
+                                <div class="flex justify-between items-center text-xs text-slate-400">
+                                    <span id="txt-progress-pct">Progreso: 0%</span>
+                                    <span id="txt-download-bytes">0.00 GB / 0.00 GB</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 flex justify-between items-center">
+                                <p class="text-xs text-slate-500 max-w-md"><i data-lucide="info" class="w-3.5 h-3.5 inline mr-1"></i>Los modelos grandes (14B+) tardan unos minutos debido a su arquitectura pesada. No cierres esta pestaña durante la inyección.</p>
+                                <button id="btn-start-pull" class="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-semibold px-6 py-3 rounded-xl transition shadow-lg shadow-amber-600/10 cursor-pointer">
+                                    <i data-lucide="play" class="w-4 h-4"></i> Iniciar Descarga
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="panel-connect" class="tab-panel space-y-6 hidden">
+                        <div class="bg-slate-950/40 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                            <h2 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                                <i data-lucide="terminal" class="w-5 h-5 text-emerald-400"></i> Punto de Enlace Local
+                            </h2>
+                            <p class="text-sm text-slate-400 mb-6">Tu túnel Cloudflare está operando este panel. Aquí tienes la dirección idéntica para enlazar tu editor local.</p>
+
+                            <div class="p-5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 space-y-3">
+                                <div class="flex items-center gap-2 text-sm text-emerald-400 font-semibold">
+                                    <i data-lucide="check-circle" class="w-4 h-4"></i> ¡Túnel de Comunicación Establecido!
+                                </div>
+                                <p class="text-xs text-slate-300">Esta dirección web rutea tanto este panel de control como las peticiones JSON que envíe tu plugin de programación.</p>
+                                
+                                <div class="flex gap-2 mt-2">
+                                    <input type="text" id="tunnel-url" readonly value="https://generando-enlace.trycloudflare.com"
+                                           class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-cyan-400 font-mono focus:outline-none">
+                                    <button onclick="copyTunnelUrl()" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-xl border border-slate-700 transition flex items-center gap-1.5 cursor-pointer">
+                                        <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copiar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <h3 class="text-sm font-semibold text-white">Configuración rápida en la extensión 'Continue' (VS Code)</h3>
+                                <p class="text-xs text-slate-400">Abre el engranaje de configuración de Continue y pega este fragmento en tu arreglo de modelos:</p>
+                                <pre class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs font-mono text-amber-400 overflow-x-auto">
+{
+  "title": "Qwen 2.5 Coder (Colab)",
+  "provider": "ollama",
+  "model": "qwen2.5-coder:14b-instruct",
+  "apiBase": "<span class="text-cyan-400 font-bold font-mono">PEGA_LA_URL_DE_ARRIBA</span>"
+}</pre>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Inicializa los iconos de Lucide al cargar
+        lucide.createIcons();
+
+        // Sistema básico de intercambio estético de pestañas
+        function switchTab(tabId) {
+            // Ocultar todos los paneles
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+            // Mostrar panel seleccionado
+            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
+
+            // Quitar estilos activos de todos los botones de pestañas
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-800', 'text-white', 'border', 'border-slate-700');
+                btn.classList.add('text-slate-400');
+                // Remover color específico del icono
+                const icon = btn.querySelector('i');
+                if (icon) icon.className = icon.className.replace(/text-cyan-400|text-amber-400|text-emerald-400/g, '').trim();
+            });
+
+            // Aplicar estilos activos al botón presionado
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            activeBtn.classList.remove('text-slate-400');
+            activeBtn.classList.add('bg-slate-800', 'text-white', 'border', 'border-slate-700');
+            
+            // Colorear el icono del botón activo según la sección
+            const icon = activeBtn.querySelector('i');
+            if(icon) {
+                if(tabId === 'config') icon.classList.add('text-cyan-400');
+                if(tabId === 'download') icon.classList.add('text-amber-400');
+                if(tabId === 'connect') icon.classList.add('text-emerald-400');
+            }
+        }
+
+        // Función utilitaria para copiar la URL del túnel
+        function copyTunnelUrl() {
+            const input = document.getElementById('tunnel-url');
+            input.select();
+            document.execCommand('copy');
+            alert('¡Dirección copiada con éxito!');
+        }
+    </script>
+</body>
+</html>
